@@ -1,3 +1,3 @@
 # BLOGGY-SPACE FOR DEVOPS
-secret="abdkjgadfhlshdsf"
-AWS_SECRET_ACCESS_KEY="AKSUITGStestsecretkey"
+secret_key=abdkjgadfhlshdsf
+AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
