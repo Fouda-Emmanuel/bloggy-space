@@ -1,25 +1,17 @@
-
 from pathlib import Path
 from datetime import timedelta
 from environs import Env
 import os
+from os import path
 env = Env()
-env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 
+dev_env_file = path.join(BASE_DIR, ".envs", ".env.dev")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-we2mbs@atn3srakd0ke!#(jvu(w-y*mg*qck7e0kgr+#qont$3'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+if path.isfile(dev_env_file):
+    env.read_env(dev_env_file)
 
 
 # Application definition
@@ -149,40 +141,12 @@ AUTH_USER_MODEL = 'api.User'
 # Site URL
 SITE_URL=env("SITE_URL")
 
-# Stripe API Keys 
-STRIPE_PUBLIC_KEY = env("STRIPE_PUBLIC_KEY")
-STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
-
-# Paypal API Keys 
-PAYPAL_CLIENT_ID = env('PAYPAL_CLIENT_ID')
-PAYPAL_SECRET_ID = env('PAYPAL_SECRET_ID')
-
-FLUTTERWAVE_PUBLIC_KEY=env("FLUTTERWAVE_PUBLIC_KEY")
-FLUTTERWAVE_PRIVATE_KEY=env("FLUTTERWAVE_PRIVATE_KEY")
-FLUTTERWAVE_PRIVATE_KEY_LIVE=env("FLUTTERWAVE_PRIVATE_KEY_LIVE")
-FLUTTERWAVE_ENCRYPTION_KEY=env("FLUTTERWAVE_ENCRYPTION_KEY")
-
-RAVE_PUBLIC_KEY=env("RAVE_PUBLIC_KEY")
-RAVE_SECRET_KEY=env("RAVE_SECRET_KEY")
-
-PAYSTACK_PUBLIC_KEY=env("PAYSTACK_PUBLIC_KEY")
-PAYSTACK_PRIVATE_KEY=env("PAYSTACK_PRIVATE_KEY")
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
-
-ANYMAIL = {
-    "MAILERSEND_API_TOKEN": env("MAILERSEND_API_TOKEN"),
-}
-
-FROM_EMAIL=env("FROM_EMAIL")
-EMAIL_BACKEND=env("EMAIL_BACKEND")
-DEFAULT_FROM_EMAIL=env("DEFAULT_FROM_EMAIL")
-SERVER_EMAIL=env("SERVER_EMAIL")
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
