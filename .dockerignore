@@ -1,0 +1,41 @@
+# Python / Django (backend)
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.sqlite3
+backend/*.db
+backend/db.sqlite3
+backend/.env
+backend/.envs/
+backend/staticfiles/
+backend/media/
+backend/*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.envs/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Git and IDE
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+*.md
+materials/
+
+# Misc
+*.bak
+*.backup
+*.tmp
