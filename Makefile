@@ -76,8 +76,14 @@ ps:
 backend-log:
 	docker compose -f compose/dev/compose.dev.yml logs backend
 
+nginx-log:
+	docker compose -f compose/dev/compose.dev.yml logs nginx
+
 backend-bash:
 	docker compose -f compose/dev/compose.dev.yml exec backend bash
+
+nginx-bash:
+	docker compose -f compose/dev/compose.dev.yml exec nginx sh
 
 log-all:
 	docker compose -f compose/dev/compose.dev.yml logs
