@@ -97,6 +97,12 @@ class PasswordResetSerializer(serializers.Serializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     post_count = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()  # ← Add this
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
     '''
         category.post_set: In Django, when you define a ForeignKey relationship from one model to another 
@@ -144,6 +150,12 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True)
+    image = serializers.SerializerMethodField()  # ← Add this
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url  # Returns /media/image/xxx.jpg
+        return None
     
     class Meta:
         model = api_models.Post
