@@ -5,8 +5,6 @@ services:
       dockerfile: ./docker/dev/django/Dockerfile
     volumes:
       - ../../backend:/app:z
-    # ports:
-    #   - "8000:8000"
     expose:
       - "8000"
     env_file:
@@ -50,11 +48,12 @@ services:
       context: ../../
       dockerfile: ./docker/dev/nginx/Dockerfile
       args:
-        VITE_API_BASE_URL: /api/v1/
-        VITE_SERVER_URL: http://localhost:8000
-        VITE_CLIENT_URL: http://localhost
+        VITE_API_BASE_URL: http://api.bloggyspace.local/api/v1
+        VITE_SERVER_URL: http://api.bloggyspace.local
+        VITE_CLIENT_URL: http://api.bloggyspace.local
         VITE_PAYPAL_CLIENT_ID: test
         VITE_CURRENCY_SIGN: $
+        VITE_COOKIE_DOMAIN: .bloggyspace.local
     ports:
       - "80:80"
     volumes:
