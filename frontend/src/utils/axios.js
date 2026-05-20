@@ -6,6 +6,7 @@ const apiInstance = axios.create({
     // Set the base URL for this instance. All requests made using this instance will have this URL as their starting point.
     baseURL: import.meta.env.VITE_API_BASE_URL,
 
+
     // Set a timeout for requests made using this instance. If a request takes longer than 5 seconds to complete, it will be canceled.
     timeout: 50000, // timeout after 5 seconds
 

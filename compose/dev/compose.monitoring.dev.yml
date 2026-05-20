@@ -1,0 +1,166 @@
+services:
+  monitoring-nginx:
+    build:
+      context: ../../
+      dockerfile: ./docker/dev/monitoring/nginx/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - prometheus
+      - grafana
+      - portainer
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.10.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+        - ../../docker/dev/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+        - ../../docker/dev/monitoring/prometheus/rules:/etc/prometheus/rules
+        - prometheus_bloggyspace_dev_data:/prometheus
+    command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--web.enable-lifecycle'
+    expose:
+        - 9090
+    networks:
+        - monitoring_dev_nw
+        - bloggyspace_nw
+
+  node-exporter:
+    image: prom/node-exporter:v1.10.2
+    container_name: node_exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    expose:
+      - 9100
+    networks:
+      - bloggyspace_nw
+
+  
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.55.1
+    container_name: cadvisor
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro 
+      - /var/lib/docker:/var/lib/docker:ro
+    restart: unless-stopped
+    expose:
+      - 8080
+    networks:
+      - bloggyspace_nw
+
+  loki:
+    image: grafana/loki:3.7
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - ../../docker/dev/monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki_dev_data:/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    expose:
+      - "3100"
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+
+  alloy:
+    image: grafana/alloy:v1.16.1
+    container_name: alloy
+    restart: unless-stopped
+    volumes:
+      - ../../docker/dev/monitoring/alloy/alloy.config:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    expose:
+      - "12345"
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+    depends_on:
+      - loki
+    
+  portainer:
+    image: portainer/portainer:latest
+    container_name: portainer_bloggyspace
+    restart: unless-stopped
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_bloggyspace_dev_data:/data
+    expose:
+      - 9000
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+
+  alertmanager:
+    image: prom/alertmanager:v0.32.0
+    container_name: alertmanager
+    restart: unless-stopped
+    volumes:
+      - ../../docker/dev/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--web.external-url=http://alertmanager.bloggyspace.local:8080'
+    env_file:
+      - ../../backend/.envs/.env.dev
+    expose:
+      - 9093
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+
+  grafana:
+    image: grafana/grafana:12.4.0
+    container_name: grafana
+    volumes:
+    - grafana_bloggyspace_dev_data:/var/lib/grafana
+    - ../../docker/dev/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    env_file:
+      - ../../backend/.envs/.env.dev
+    environment:
+    - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    expose:
+    - 3000
+    networks:
+        - monitoring_dev_nw
+        - bloggyspace_nw
+    depends_on:
+      - prometheus
+      - node-exporter
+      - cadvisor
+      - loki
+
+
+networks:
+  bloggyspace_nw:
+    external: true
+  monitoring_dev_nw:
+    external: true
+      
+volumes:
+  prometheus_bloggyspace_dev_data:
+  grafana_bloggyspace_dev_data:
+  portainer_bloggyspace_dev_data:
+  loki_dev_data:
