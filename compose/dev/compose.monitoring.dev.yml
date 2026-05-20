@@ -20,6 +20,7 @@ services:
     restart: unless-stopped
     volumes:
         - ../../docker/dev/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+        - ../../docker/dev/monitoring/prometheus/rules:/etc/prometheus/rules
         - prometheus_bloggyspace_dev_data:/prometheus
     command:
         - '--config.file=/etc/prometheus/prometheus.yml'
@@ -68,7 +69,36 @@ services:
     networks:
       - bloggyspace_nw
 
-  
+  loki:
+    image: grafana/loki:3.7
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - ../../docker/dev/monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki_dev_data:/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    expose:
+      - "3100"
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+
+  alloy:
+    image: grafana/alloy:v1.16.1
+    container_name: alloy
+    restart: unless-stopped
+    volumes:
+      - ../../docker/dev/monitoring/alloy/alloy.config:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    expose:
+      - "12345"
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
+    depends_on:
+      - loki
+    
   portainer:
     image: portainer/portainer:latest
     container_name: portainer_bloggyspace
@@ -83,6 +113,22 @@ services:
       - monitoring_dev_nw
       - bloggyspace_nw
 
+  alertmanager:
+    image: prom/alertmanager:v0.32.0
+    container_name: alertmanager
+    restart: unless-stopped
+    volumes:
+      - ../../docker/dev/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--web.external-url=http://alertmanager.bloggyspace.local:8080'
+    env_file:
+      - ../../backend/.envs/.env.dev
+    expose:
+      - 9093
+    networks:
+      - monitoring_dev_nw
+      - bloggyspace_nw
 
   grafana:
     image: grafana/grafana:12.4.0
@@ -98,11 +144,13 @@ services:
     expose:
     - 3000
     networks:
+        - monitoring_dev_nw
         - bloggyspace_nw
     depends_on:
       - prometheus
       - node-exporter
       - cadvisor
+      - loki
 
 
 networks:
@@ -115,3 +163,4 @@ volumes:
   prometheus_bloggyspace_dev_data:
   grafana_bloggyspace_dev_data:
   portainer_bloggyspace_dev_data:
+  loki_dev_data:

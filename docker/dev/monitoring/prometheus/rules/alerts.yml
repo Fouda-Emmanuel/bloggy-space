@@ -1,0 +1,68 @@
+groups:
+  - name: backend
+    rules:
+      - alert: HighErrorRate
+        expr: (sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m])) / sum(rate(django_http_responses_total_by_status_total[5m]))) * 100 > 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          description: "Error rate is {{ $value | printf \"%.2f\" }}%"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(django_http_requests_latency_including_middlewares_seconds_bucket[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          description: "P95 latency is {{ $value | printf \"%.2f\" }}s"
+
+      - alert: DjangoDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          description: "Backend is DOWN for more than 1 minute"
+
+      - alert: LowSLA
+        expr: avg_over_time(up{job="backend"}[24h]) * 100 < 45
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          description: "Backend SLA over 24h dropped below 45%"
+
+  - name: infrastructure
+    rules:
+      - alert: HighCPU
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          description: "CPU usage is {{ $value | printf \"%.2f\" }}%"
+
+      - alert: HighMemory
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          description: "Memory usage is {{ $value | printf \"%.2f\" }}%"
+
+      - alert: ContainerDown
+        expr: absent(container_last_seen{container="dev-backend-1"})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          description: "Container dev-backend-1 is down"
+
+      - alert: BackendRestarted
+        expr: changes(container_start_time_seconds{name=~".*backend.*"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          description: "Backend container restarted"
